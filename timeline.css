@@ -4,6 +4,10 @@ html,body,#wrapper {
 	margin: 0px;
 }
 
+.event-g{
+	overflow : hidden
+}
+
 .chart {
 	font-family: Arial, sans-serif;
 	font-size: 12px;
