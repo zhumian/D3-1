@@ -7,29 +7,26 @@ var events = [];
 
 
 var targets = ["一支队","二支队", "三支队", "四支队","五支队"];
+
+
 var eventTypes = {
-    "target_appear": "target_appear",
-    "target_disappear": "target_disappear",
-    "action_start": "action_start",
-    "action_over": "action_over"
-}
-if(events.size > 0){
-    events.sort(function(a, b) {
-        return a.endDate - b.endDate;
-    });
-    var maxDate = events[events.length - 1].endDate;
-    events.sort(function(a, b) {
-        return a.startDate - b.startDate;
-    });
-    var minDate = events[0].startDate;
-}
+    "action": "action",
+    "appear": "appear",
+    "bomb": "bomb",
+    "car": "car",
+    "do": "do",
+    "find": "find",
+    "pack": "pack"
+};
 
+sort(events)
 
-var format = "%Y-%m-%d %H:%M";
+//var format = "%Y-%m-%d %H:%M";
+var format = "%m-%d %H:%M";
 var time_formatter = d3.time.format(format);
 var timeDomainString = "1day";
 
-var timeline = d3.timeline().targets(targets).eventTypes(eventTypes).tickFormat(format);
+var timeline = d3.timeline().targets(targets).eventTypes(eventTypes).tickFormat(format).init();
 
 var margin = {
      top : 20,
@@ -42,6 +39,19 @@ timeline.margin(margin);
 timeline.timeDomainMode("fixed");
 changeTimeDomain(timeDomainString);
 timeline(events);
+
+function sort(events) {
+    if(events.size > 0){
+        events.sort(function(a, b) {
+            return a.startDate - b.startDate;
+        });
+        var maxDate = events[events.length - 1].startDate;
+        events.sort(function(a, b) {
+            return a.startDate - b.startDate;
+        });
+        var minDate = events[0].startDate;
+    }
+}
 
 
 function changeTimeDomain(timeDomainString) {
@@ -59,11 +69,11 @@ function changeTimeDomain(timeDomainString) {
 	break;
 
     case "1day":
-	timeline.timeDomain([ d3.time.day.offset(getEndDate(), -1), getEndDate() ]);
+	timeline.timeDomain([ d3.time.hour.offset(getEndDate(), -12), d3.time.hour.offset(getEndDate(), +12)]);
 	break;
 
     case "1week":
-	timeline.timeDomain([ d3.time.day.offset(getEndDate(), -7), getEndDate() ]);
+	timeline.timeDomain([ d3.time.day.offset(getEndDate(), -3), d3.time.day.offset(getEndDate(), +4) ]);
 	break;
     default:
 
@@ -75,26 +85,23 @@ function changeTimeDomain(timeDomainString) {
 function getEndDate() {
     var lastEndDate = Date.now();
     if (events.length > 0) {
-	lastEndDate = events[events.length - 1].endDate;
+	lastEndDate = events[events.length - 1].startDate;
     }
-
     return lastEndDate;
 }
 
 function addTask() {
 
     var lastEndDate = getEndDate();
-    var eventTypeKeys = Object.keys(eventTypes)
+    var eventTypeKeys = Object.keys(eventTypes);
     var eventType = eventTypeKeys[Math.floor(Math.random() * eventTypeKeys.length)];
     var target = targets[Math.floor(Math.random() * targets.length)];
-    var startDate = d3.time.hour.offset(lastEndDate, Math.ceil(1 * Math.random()));
-    var endDate = d3.time.hour.offset(lastEndDate, (Math.ceil(Math.random() * 3)) + 1);
+    var startDate = d3.time.hour.offset(lastEndDate,  + 1);
     var event = {
         "startDate" : startDate,
-        "endDate" : endDate,
         "eventType" : eventType,
         "target" : target,
-        "desc":  time_formatter(startDate) + ":" + time_formatter(endDate)
+        "desc":  "动作描述"
     };
     events.push(event);
 
@@ -105,5 +112,4 @@ function addTask() {
 function removeTask() {
     events.pop();
     changeTimeDomain(timeDomainString);
-    //timeline.redraw(events);
 };

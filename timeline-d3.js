@@ -23,6 +23,8 @@ d3.timeline = function() {
     var width = document.body.clientWidth - margin.right - margin.left-5;
 
     var tickFormat = "%H:%M";
+    var timeFormat = d3.time.format("%m-%d %H:%M");
+    var global_width = 300;
 
     var keyFunction = function(d) {
         if(d != null){
@@ -43,205 +45,223 @@ d3.timeline = function() {
 
     var xAxis = d3.svg.axis().scale(x).orient("bottom").tickFormat(d3.time.format(tickFormat)).tickSubdivide(true)
         .tickSize(10).tickPadding(10);
-    /*var xAxis = d3.svg.axis().scale(x).orient("bottom").tickFormat(d3.time.format(tickFormat));*/
 
     var yAxis = d3.svg.axis().scale(y).orient("left").tickSize(0);
 
-    var initTimeDomain = function(targets) {
+    var loadWidth = function (d) {
+        if (d == null){
+            return;
+        }
+        var x_d = x(d.startDate);
+        console.log("x_d : " + x_d);
+        if(x_d == 0){
+            return 0;
+        }
+        return global_width;
+    };
+
+    var loadDisplay = function (d) {
+        var x_d = x(d.startDate);
+        console.log("x_d : " + x_d);
+        if(x_d == 0){
+            return "none";
+        }
+        return null;
+    };
+
+    var loadIcon = function (d) {
+        var x_d = x(d.startDate);
+        console.log("x_d : " + x_d);
+        if(x_d == 0){
+            return "";
+        }
+        var eventType = d.eventType;
+        return "url(#" + eventType + ")";
+    };
+
+    var initTimeDomain = function(events) {
         if (timeDomainMode === FIT_TIME_DOMAIN_MODE) {
-            if (targets === undefined || targets.length < 1) {
+            if (events === undefined || events.length < 1) {
                 timeDomainStart = d3.time.day.offset(new Date(), -3);
                 timeDomainEnd = d3.time.hour.offset(new Date(), +3);
                 return;
             }
-            targets.sort(function(a, b) {
-                return a.endDate - b.endDate;
-            });
-            timeDomainEnd = targets[targets.length - 1].endDate;
-            targets.sort(function(a, b) {
+            events.sort(function(a, b) {
                 return a.startDate - b.startDate;
             });
-            timeDomainStart = targets[0].startDate;
+            timeDomainEnd = d3.time.hour.offset(events[events.length - 1].startDate, +3);;
+
+            events.sort(function(a, b) {
+                return a.startDate - b.startDate;
+            });
+            timeDomainStart = events[0].startDate;
+            debugger
+            console.log("startDate : " + timeFormat(timeDomainStart) + "; endDate : " + timeFormat(timeDomainEnd));
         }
     };
 
     var initAxis = function() {
-        x = d3.time.scale().domain([ timeDomainStart, timeDomainEnd ]).range([ 0, width ]).clamp(true);
+        debugger
+        x = d3.time.scale().domain([ timeDomainStart, timeDomainEnd ])
+            .range([ 0, width ]).clamp(true);
         y = d3.scale.ordinal().domain(targets).rangeRoundBands([ 0, height - margin.top - margin.bottom ], .1);
         xAxis = d3.svg.axis().scale(x).orient("bottom").tickFormat(d3.time.format(tickFormat)).tickSubdivide(true)
-            .tickSize(12).tickPadding(12);
+            .tickSize(10).tickPadding(10);
 
         yAxis = d3.svg.axis().scale(y).orient("left").tickSize(0);
     };
 
-    function timeline(targets) {
+    function timeline(events) {
         console.log("timeline function")
-        initTimeDomain(targets);
+        initTimeDomain(events);
         initAxis();
 
-        var svg = d3.select(selector)
-            .append("svg")
+        var svg = d3.select(selector).append("svg")
             .attr("class", "chart")
             .attr("width", width + margin.left + margin.right)
             .attr("height", height + margin.top + margin.bottom)
-            .append("g")
+            .attr("fill", "#022056");
+
+        var eventTypesKeys = Object.keys(eventTypes);
+        var defs = svg.append("defs");
+
+
+        for(var i = 0; i < eventTypesKeys.length; i++){
+            defs .append("pattern")
+                .attr('patternUnits', 'userSpaceOnUse')
+                .attr("id", eventTypesKeys[i])
+                .attr('width', 300)
+                .attr("height", function(d) { return y.rangeBand(); })
+                .append("image")
+                .attr("width", 300)
+                .attr("height", function(d) { return y.rangeBand(); })
+                .attr("xlink:href", function (d) {
+                    var key = eventTypesKeys[i];
+                    return "icon/" + key + ".png";
+                });
+        }
+        var g = svg.append("g")
             .attr("class", "timeline-chart")
             .attr("width", width + margin.left + margin.right)
             .attr("height", height + margin.top + margin.bottom)
             .attr("transform", "translate(" + margin.left + ", " + margin.top + ")");
 
-        var g = svg.selectAll(".event-g")
-            .data(targets, keyFunction).enter()
-            .append("g")
-            .attr("class", "event-g");
-        g.append("svg:image")
-            .attr('xlink:href', 'qq.jpg')
-            .attr("class", "timeline-event")
-            .attr("rx", 5)
-            .attr("ry", 5)
-            .attr("transform", rectTransform)
-            .attr("height", function(d) { return y.rangeBand(); })
-            .attr("width", function(d) {
-                return Math.max(1,(x(d.endDate) - x(d.startDate)));
-            });
-        g.append("text")
-            .attr("rx", 5)
-            .attr("ry", 5)
-            .attr("height", function(d) { return y.rangeBand(); })
-            .attr("width", function(d) {
-                return Math.max(1,(x(d.endDate) - x(d.startDate)));
+        g.selectAll(".target-line")
+            .data(targets)
+            .enter()
+            .append("line")
+            .attr("class", "target-line")
+            .attr("x1", 0)
+            .attr("x2", width)
+            .attr("y1", function (d, i) {
+                var count = targets.length;
+                var perHeight = (height - margin.top - margin.bottom)/count;
+                return perHeight * i;
             })
-            .attr("transform", rectTransform)
-            .text(function (d, i) {
-                return d.desc
+            .attr("y2", function (d, i) {
+                var count = targets.length;
+                var perHeight = (height - margin.top - margin.bottom)/count;
+                return perHeight * i;
             });
 
+        //svg.attr("fill", "url(#bg");
 
-        svg.append("g")
+        g.append("g")
             .attr("class", "x axis")
             .attr("transform", "translate(0, " + (height - margin.top - margin.bottom) + ")")
             .transition()
             .call(xAxis);
 
-        svg.append("g").attr("class", "y axis").transition().call(yAxis);
+        g.append("g").attr("class", "y axis").transition().call(yAxis);
 
         return timeline;
 
     }
 
-    timeline.redraw = function(targets) {
+    timeline.redraw = function(events) {
         console.log("redraw function")
-        initTimeDomain(targets);
+        initTimeDomain(events);
         initAxis();
 
         var svg = d3.select(".chart");
         var chart = d3.select(".timeline-chart");
-        var g_0 = chart.selectAll(".event-g").data(targets, keyFunction);
+        var g_0 = chart.selectAll(".event-g").data(events, keyFunction);
+
         var g = g_0.enter()
             .insert("g", ":first-child")
-            .attr("class", "event-g");
-        //var g = ganttChartGroup.selectAll("g").data(targets, keyFunction);
+            .attr("class", "event-g")
 
         g.attr("rx", 5)
             .attr("ry", 5)
-            .transition()
+            //.transition()
             .attr("y", 0)
             .attr("transform", rectTransform)
             .attr("height", function(d) { return y.rangeBand(); })
-            .attr("width", function(d) {
-                return Math.max(1,(x(d.endDate) - x(d.startDate)));
-            });
+            .attr("width", loadWidth);
 
-        g.insert("svg:image")
-            .attr('xlink:href', 'qq.jpg')
-            .attr("class", "timeline-event")
+        g.append("rect")
+            .attr("x",0)
+            .attr("y", 0)
+            .attr("class", "event-rect")
+            .attr("width",loadWidth)
             .attr("height", function(d) { return y.rangeBand(); })
-            .attr("width", function(d) {
-                return Math.max(1,(x(d.endDate) - x(d.startDate)));
-            });
+            .attr("fill", loadIcon);
 
         g.insert("text")
             .text(function (d, i) {
                 return d.desc
             })
+            .attr("class", "event-desc")
             .attr("height", function(d) { return y.rangeBand(); })
-            .attr("width", function(d) {
-                return Math.max(1,(x(d.endDate) - x(d.startDate)));
+            .attr("width", loadWidth)
+            .attr("x",function () {
+                return global_width/3;
+            })
+            .attr("y",function (d) {
+                var y_d = y.rangeBand()/9;
+                return  y_d*4;
             });
+        g.insert("text")
+            .text(function (d, i) {
+                var time = d.startDate;
+                return d3.time.format("%m-%d %H:%M")(time);
+            })
+            .attr("class", "event-time")
+            .attr("height", function(d) { return y.rangeBand(); })
+            .attr("width", loadWidth)
+            .attr("x",function () {
+                return global_width/3;
+            })
+            .attr("y",function (d) {
+                var y_d = y.rangeBand()/9;
+                return  y_d*6;
+            });
+
 
 
 
         g_0.transition()
             .attr("transform", rectTransform)
             .attr("height", function(d) { return y.rangeBand(); })
-            .attr("width", function(d) {
-                console.log(d.target + " width : " + Math.max(1,(x(d.endDate) - x(d.startDate)))  + d.startDate + " " + d.endDate);
-                return Math.max(1,(x(d.endDate) - x(d.startDate)));
-            });
-        svg.selectAll("img").transition()
-            .attr("transform", rectTransform)
-            .attr("height", function(d) { return y.rangeBand(); })
-            .attr("width", function(d) {
-                debugger
-                console.log(d.target + " width : " + Math.max(1,(x(d.endDate) - x(d.startDate)))  + d.startDate + " " + d.endDate);
-                return Math.max(1,(x(d.endDate) - x(d.startDate)));
-            });
+            .attr("width", loadWidth);
+        svg.selectAll("rect").transition()
+            //.attr("transform", rectTransform)
+            //.attr("height", function(d) { return y.rangeBand(); })
+            .attr("width", loadWidth);
         svg.selectAll("text").transition()
-            .attr("transform", rectTransform)
+            //.attr("transform", rectTransform)
             .attr("height", function(d) { return y.rangeBand(); })
-            .attr("width", function(d) {
-                console.log(d.target + " width : " + Math.max(1,(x(d.endDate) - x(d.startDate)))  + d.startDate + " " + d.endDate);
-                return Math.max(1,(x(d.endDate) - x(d.startDate)));
-            });
-        /*if(g_0[0] != null){
-            for(var i = 0; i < g_0[0].length -1; i++){
-                debugger
-                var item = g_0[0][i];
-            }
-        }*/
+            .attr("width", loadWidth)
+            .attr("display", loadDisplay);
 
-        /*g_0.selectAllChildren().transition()
-            .attr("transform", rectTransform)
-            .attr("height", function(d) { return y.rangeBand(); })
-            .attr("width", function(d) {
-                console.log(d.target + " width : " + Math.max(1,(x(d.endDate) - x(d.startDate)))  + d.startDate + " " + d.endDate);
-                return Math.max(1,(x(d.endDate) - x(d.startDate)));
-            });*/
+
+
         g_0.exit().remove();
 
-        /*g.transition()
-            .attr("transform", rectTransform)
-            .attr("height", function(d) { return y.rangeBand(); })
-            .attr("width", function(d) {
-                return Math.max(1,(x(d.endDate) - x(d.startDate)));
-            });*/
 
-
-        /*g.enter()
-            .insert("rect",":first-child")
-            .attr("rx", 5)
-            .attr("ry", 5)
-            .attr("class", function(d){
-                return d.eventType;
-            })
-            .transition()
-            .attr("y", 0)
-            .attr("transform", rectTransform)
-            .attr("height", function(d) { return y.rangeBand(); })
-            .attr("width", function(d) {
-                return Math.max(1,(x(d.endDate) - x(d.startDate)));
-            });
-
-        g.transition()
-            .attr("transform", rectTransform)
-            .attr("height", function(d) { return y.rangeBand(); })
-            .attr("width", function(d) {
-                return Math.max(1,(x(d.endDate) - x(d.startDate)));
-            });*/
-
-        //g.exit().remove();
         svg.select(".x").transition().call(xAxis);
         svg.select(".y").transition().call(yAxis);
+        //svg.select(".tick major").select()transition().attr("fill","white");
 
         return timeline;
     };
@@ -254,9 +274,10 @@ d3.timeline = function() {
     };
 
     timeline.timeDomain = function(value) {
+        debugger
         if (!arguments.length)
             return [ timeDomainStart, timeDomainEnd ];
-        timeDomainStart = +value[0], timeDomainEnd = +value[1];
+        timeDomainStart = value[0], timeDomainEnd = value[1];
         return timeline;
     };
 
@@ -312,6 +333,17 @@ d3.timeline = function() {
         if (!arguments.length)
             return selector;
         selector = value;
+        return timeline;
+    };
+
+    timeline.init = function() {
+        var svg = d3.select(".chart");
+        svg.append("defs")
+            .append("pattern")
+            .attr('patternUnits', 'userSpaceOnUse')
+            .attr("id", "action")
+            .append("image")
+            .attr("xlink:href", "icon/action.png");
         return timeline;
     };
 

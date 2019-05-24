@@ -4,77 +4,42 @@ html,body,#wrapper {
 	margin: 0px;
 }
 
+.axis text{
+	fill: white;
+}
+
+.event-rect{
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.event-desc{
+	font-size: 16px;
+	fill: white;
+
+}
+
+.event-time{
+	font-size: 16px;
+	fill: #fffb00
+}
+
+.target-line{
+	stroke: grey;
+}
+
 .event-g{
 	overflow : hidden
 }
 
 .chart {
 	font-family: Arial, sans-serif;
-	font-size: 12px;
+	font-size: 18px;
+	color: white
 }
 
 .axis path,.axis line {
 	fill: none;
-	stroke: #000;
+	stroke: white;
 	shape-rendering: crispEdges;
-}
-
-.timeline-event{
-	background-image: url('qq.jpg')
-}
-
-.bar {
-	fill: #33b5e5;
-}
-
-.target_disappear {
-	fill: #CC0000;
-}
-
-.action_start {
-	fill: #669900;
-}
-
-.target_appear {
-	fill: #33b5e5;
-}
-
-.action_over {
-	fill: #ffbb33;
-}
-
-#forkme_banner {
-	display: block;
-	position: absolute;
-	top: 0;
-	right: 10px;
-	z-index: 10;
-	padding: 10px 50px 10px 10px;
-	color: #fff;
-	background:
-		url('http://dk8996.github.io/Gantt-Chart/images/blacktocat.png')
-		#0090ff no-repeat 95% 50%;
-	font-weight: 700;
-	box-shadow: 0 0 10px rgba(0, 0, 0, .5);
-	border-bottom-left-radius: 2px;
-	border-bottom-right-radius: 2px;
-	text-decoration: none;
-}
-
-#twittme_banner {
-	display: block;
-	position: absolute;
-	top: 0;
-	right: 180px;
-	z-index: 10;
-	padding: 10px 50px 10px 10px;
-	color: #fff;
-	background:
-		url('http://dk8996.github.io/Gantt-Chart/images/twitter.png')
-		#0090ff no-repeat 95% 50%;
-	font-weight: 700;
-	box-shadow: 0 0 10px rgba(0, 0, 0, .5);
-	border-bottom-left-radius: 2px;
-	border-bottom-right-radius: 2px;
-	text-decoration: none;
 }

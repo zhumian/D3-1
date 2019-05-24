@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Timeline Chart Example</title>
+    <meta charset="UTF-8">
+    <link type="text/css" href="http://mbostock.github.io/d3/style.css" rel="stylesheet" />
+    <script type="text/javascript" src="./d3/d3.v3.min.js"></script>
+</head>
+<body>
+
+
+
+
+</body>
+
+</html>
+<script>
+    var svg = d3.select("body").append("svg")
+        .attr("fill", "url('icon/bg.png')");
+    /*rects = [1, 3, 4, 6],
+        circles = [7, 8, 9, 10];
+
+    //var color = d3.scaleOrdinal(d3.schemeCategory10);
+    var defs = svg.append("defs");
+    defs.append('pattern')
+        .attr('id', 'pic1')
+        .attr('patternUnits', 'userSpaceOnUse')
+        .attr('width', 100)
+        .attr('height', 100)
+        .append('svg:image')
+        .attr('xlink:href', 'icon/action.png')
+        .attr("width", 200)
+        .attr("height", 200);
+        //.attr("x", 0)
+        //.attr("y", -10);
+
+    svg.append("a")
+        .attr("xlink:href", "http://www.google.com")
+        .append('path')
+        .attr("overflow","hidden")
+        .attr("d", d3.svg.symbol().type("triangle-up").size(10000))
+        .attr("transform", function(d) { return "translate(" + 300 + "," + 200 + ") rotate(0)"; })
+        .attr("fill", "url(#pic1)");*/
+    var defs = svg.append("defs");
+    defs.append('pattern')
+        .attr('id', 'bg')
+        .attr('patternUnits', 'userSpaceOnUse')
+        .attr('width', 200)
+        .attr('height', 200)
+        .append('image')
+        .attr('xlink:href', 'icon/bg.png')
+        .attr("width", 200)
+        .attr("height", 200);
+
+    var g = svg.append("g")
+        .attr("x",0)
+        .attr("y",0)
+        .attr("width", 200)
+        .attr("height", 200)
+        .attr("fill", "url(#bg)");
+
+
+
+</script>
