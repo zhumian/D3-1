@@ -5,8 +5,9 @@
     <meta charset="UTF-8">
     <link type="text/css" href="http://mbostock.github.io/d3/style.css" rel="stylesheet" />
     <link type="text/css" href="timeline.css" rel="stylesheet" />
+
 </head>
-<body style="background-image: url(icon/bg.png)">
+<body >
 
 <button type="button" onclick="addTask()">Add Task</button>
 <button type="button" onclick="removeTask()">Remove Task</button>
@@ -15,11 +16,14 @@
 <button type="button" onclick="changeTimeDomain('6hr')">6 HR</button>
 <button type="button" onclick="changeTimeDomain('1day')">1 DAY</button>
 <button type="button" onclick="changeTimeDomain('1week')">1 WEEK</button>
-<script type="text/javascript" src="./d3/d3.v3.min.js"></script>
-<script type="text/javascript" src="./timeline-d3.js"></script>
-<script type="text/javascript" src="timeline.js"></script>
 
+
+<div id="timeline" style="height: 90%;width: 90%;background-image: url(icon/bg.png);background-repeat: no-repeat;background-size: 100% 100%">
+</div>
 
 
 </body>
 </html>
+<script type="text/javascript" src="./d3/d3.v3.min.js"></script>
+<script type="text/javascript" src="./timeline-d3.js"></script>
+<script type="text/javascript" src="timeline.js"></script>
