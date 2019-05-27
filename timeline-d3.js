@@ -1,5 +1,5 @@
 /**
- * @author Dimitry Kudrayvtsev
+ * @author liaozj
  * @version 2.1
  */
 
@@ -9,24 +9,39 @@ d3.timeline = function() {
 
     var margin = {
         top : 20,
-        right : 0,
+        right : 40,
         bottom : 20,
-        left : 0
+        left : 60
     };
-    var selector = document.getElementById("timeline");
-    var timeDomainStart = d3.time.day.offset(new Date(),-3);
-    var timeDomainEnd = d3.time.hour.offset(new Date(),+3);
+    var selector;
+    var timeDomainStart = Date.now();
+    var timeDomainEnd = d3.time.day.offset(new Date(), +1);
     var timeDomainMode = FIT_TIME_DOMAIN_MODE;// fixed or fit
     var targets = [];
-    var eventTypes = [];
-    var height = selector.offsetHeight - margin.top - margin.bottom-50;
-    var width = selector.offsetWidth - margin.right - margin.left;
+    var eventTypes = {
+        "action": "action",
+        "appear": "appear",
+        "bomb": "bomb",
+        "car": "car",
+        "do": "do",
+        "find": "find",
+        "pack": "pack"
+    };
+    var height;
+    var width;
     var tickSize = 10;
     var tickFormat = "%Y-%m-%d %H:%M";
     var timeFormat = d3.time.format("%m-%d %H:%M");
-    var global_width = width/tickSize*2;
+    var global_width;
     var global_scale = 1;
     var zoom;
+    var x;
+    var y;
+    var xAxis;
+    var yAxis;
+    var svg;
+
+
 
     var keyFunction = function(d) {
         if(d != null){
@@ -41,28 +56,10 @@ d3.timeline = function() {
         return "translate(" + x(d.startDate) + "," + y(d.target) + ")";
     };
 
-    var x = d3.time.scale().domain([ d3.time.day.offset(timeDomainStart,-3), d3.time.day.offset(timeDomainStart,+3) ]).range([ -width, width ]).clamp(true);
-
-
-    var y = d3.scale.ordinal().domain(targets).rangeRoundBands([ 0, height - margin.top - margin.bottom ], .1);
-
-    var xAxis = d3.svg.axis().scale(x).orient("bottom").tickFormat(d3.time.format(tickFormat)).tickSubdivide(true)
-        .tickSize(10).tickPadding(10);
-
-    var yAxis = d3.svg.axis().scale(y).orient("left").tickSize(0);
-    var svg = d3.select(selector).append("svg")
-        .attr("class", "chart")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom);
-
-
-
     var loadWidth = function (d) {
         if (d == null){
             return;
         }
-        var x_d = x(d.startDate);
-
         return global_width;
     };
 
@@ -121,7 +118,7 @@ d3.timeline = function() {
         xAxis = d3.svg.axis().scale(x).orient("bottom").tickFormat(d3.time.format(tickFormat)).tickSubdivide(true)
             .tickSize(10).tickPadding(10);
        /* xAxis = d3.svg.axis().scale(x).orient("bottom").tickFormat(d3.time.format(tickFormat));*/
-        yAxis = d3.svg.axis().scale(y).orient("left").tickSize(0).tickPadding(20);
+        yAxis = d3.svg.axis().scale(y).orient("left").tickSize(0).tickPadding(10);
     };
 
     function zoomed() {
@@ -196,7 +193,7 @@ d3.timeline = function() {
             .append("line")
             .attr("class", "target-line")
             .attr("x1", margin.left)
-            .attr("x2", width)
+            .attr("x2", margin.left + width)
             .attr("y1", function (d, i) {
                 var count = targets.length;
                 var perHeight = (height - margin.top - margin.bottom)/count;
@@ -294,9 +291,6 @@ d3.timeline = function() {
                 return  y_d*6;
             });
 
-
-
-
         event_gs.transition()
             .attr("transform", rectTransform)
             .attr("height", function(d) { return y.rangeBand(); })
@@ -311,17 +305,36 @@ d3.timeline = function() {
             .attr("width", loadWidth)
             .attr("display", loadDisplay);
 
-
-
         event_gs.exit().remove();
-
         zoomed();
 
-        //zoomed();
-        //svg.select(".x").transition().call(xAxis);
-        //svg.select(".y").transition().call(yAxis);
-        //svg.select(".tick major").select()transition().attr("fill","white");
+        return timeline;
+    };
 
+    timeline.init = function (selector_value, margin_value, targets_value, events) {
+        console.log("timeline.init");
+        selector = selector_value;
+        margin = margin_value;
+        height = selector.offsetHeight;
+        width = selector.offsetWidth - margin.right - margin.left;
+
+        x = d3.time.scale().domain([ d3.time.day.offset(timeDomainStart,-3), d3.time.day.offset(timeDomainStart,+3) ]).range([ -width, width ]).clamp(true);
+
+
+        y = d3.scale.ordinal().domain(targets).rangeRoundBands([ 0, height - margin.top - margin.bottom ], .1);
+
+        xAxis = d3.svg.axis().scale(x).orient("bottom").tickFormat(d3.time.format(tickFormat)).tickSubdivide(true)
+            .tickSize(10).tickPadding(10);
+        yAxis = d3.svg.axis().scale(y).orient("left").tickSize(0);
+        global_width = width/tickSize*2;
+
+        svg = d3.select(selector).append("svg")
+            .attr("class", "chart")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom);
+        targets = targets_value;
+        timeline.redraw(events);
+        timeline(events);
         return timeline;
     };
 
@@ -339,11 +352,6 @@ d3.timeline = function() {
         return timeline;
     };
 
-    /**
-     * @param {string}
-     *                vale The value can be "fit" - the domain fits the data or
-     *                "fixed" - fixed domain.
-     */
     timeline.timeDomainMode = function(value) {
         if (!arguments.length)
             return timeDomainMode;
@@ -359,52 +367,33 @@ d3.timeline = function() {
         return timeline;
     };
 
-    timeline.eventTypes = function(value) {
-        if (!arguments.length)
-            return eventTypes;
-        eventTypes = value;
-        return timeline;
-    };
-
-    timeline.width = function(value) {
-        if (!arguments.length)
-            return width;
-        width = +value;
-        return timeline;
-    };
-
-    timeline.height = function(value) {
-        if (!arguments.length)
-            return height;
-        height = +value;
-        return timeline;
-    };
-
-    timeline.tickFormat = function(value) {
-        if (!arguments.length)
-            return tickFormat;
-        tickFormat = value;
-        return timeline;
-    };
-
-
-
-    timeline.init = function() {
-        var svg = d3.select(".chart");
-        svg.append("defs")
-            .append("pattern")
-            .attr('patternUnits', 'userSpaceOnUse')
-            .attr("id", "action")
-            .append("image")
-            .attr("xlink:href", "icon/action.png");
-        return timeline;
-    };
-
     timeline.selector = function(value) {
         if (!arguments.length)
             return selector;
         selector = value;
         return timeline;
+    };
+
+    timeline.reset = function (events) {
+        if (events.length > 0) {
+            events.sort(function(a, b) {
+                return a.startDate - b.startDate;
+            });
+            timeline.timeDomain(events[0].startDate, endDate = d3.time.hour.offset(events[events.length - 1].startDate, 2));
+        }else{
+            var now = Date.now();
+            timeline.timeDomain(now, d3.time.day.offset(now, +1));
+        }
+        initTimeDomain(events);
+        initAxis();
+        zoom = d3.behavior.zoom()
+            .x(x)
+            //.y(y)
+            .scale(global_scale)
+            .scaleExtent([0.5,10])
+            .on("zoom", zoomed);
+        svg.call(zoom);
+        zoomed()
     };
 
     return timeline;

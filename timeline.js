@@ -1,10 +1,5 @@
-
 var events = [];
-
-
 var targets = ["成员一","成员二", "成员三", "成员四","成员五"];
-
-
 var eventTypes = {
     "action": "action",
     "appear": "appear",
@@ -14,52 +9,41 @@ var eventTypes = {
     "find": "find",
     "pack": "pack"
 };
-
-sort(events)
-
-//var format = "%Y-%m-%d %H:%M";
+var selector = document.getElementById("timeline");
 var format = "%Y-%m-%d %H:%M";
 var timeFormat = d3.time.format(format);
-var timeDomainString = "1day";
-
-var timeline = d3.timeline().targets(targets).eventTypes(eventTypes);
+var timeline;
 
 var margin = {
      top : 20,
      right : 40,
      bottom : 20,
-     left : 100
+     left : 60
 };
-timeline.margin(margin);
 
-timeline.timeDomainMode("fit");
-changeTimeDomain(timeDomainString);
-timeline(events);
+init();
+function init() {
+    timeline = d3.timeline().init(selector, margin, targets, events);
+    timeline.margin(margin);
+}
 
 function sort(events) {
     if(events.size > 0){
         events.sort(function(a, b) {
             return a.startDate - b.startDate;
         });
-        var maxDate = events[events.length - 1].startDate;
-        events.sort(function(a, b) {
-            return a.startDate - b.startDate;
-        });
-        var minDate = events[0].startDate;
     }
 }
 
-
-function changeTimeDomain() {
-    sort(events);
+function redraw() {
     var startDate = getStartDate();
     var endDate = getEndDate();
     timeline.timeDomain([ startDate, endDate]);
-    timeline.tickFormat(format);
     timeline.redraw(events);
 }
 
 function getStartDate() {
+    sort(events);
     var startDate = Date.now();
     if (events.length > 0) {
         startDate = events[0].startDate;
@@ -68,6 +52,7 @@ function getStartDate() {
 }
 
 function getEndDate() {
+    sort(events);
     var endDate = d3.time.day.offset(new Date(), +1);
     if (events.length > 0) {
         endDate = d3.time.hour.offset(events[events.length - 1].startDate, 2);
@@ -76,8 +61,7 @@ function getEndDate() {
     return endDate;
 }
 
-function addTask() {
-
+function addEvent() {
     var lastEndDate = getEndDate();
     var eventTypeKeys = Object.keys(eventTypes);
     var eventType = eventTypeKeys[Math.floor(Math.random() * eventTypeKeys.length)];
@@ -91,13 +75,15 @@ function addTask() {
         "desc":  "动作描述"
     };
     events.push(event);
-
-    changeTimeDomain(timeDomainString);
-    //timeline.redraw(events);
+    redraw();
 };
 
-function removeTask() {
+function removeEvent() {
     events.pop();
-    changeTimeDomain(timeDomainString);
-};
+    redraw();
+}
+
+function reset() {
+    timeline.reset(events);
+}
 
